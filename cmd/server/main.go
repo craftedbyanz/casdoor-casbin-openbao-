@@ -72,7 +72,7 @@ func main() {
 	authGroup.POST("/login", authHandler.DirectLogin)
 	// OAuth flow (for web apps with frontend)
 	authGroup.GET("/oauth/login", authHandler.OAuthLogin)
-	authGroup.GET("/oauth/callback", authHandler.Callback)
+	authGroup.GET("/callback", authHandler.Callback)
 	authGroup.POST("/logout", authHandler.Logout)
 
 	// Protected routes

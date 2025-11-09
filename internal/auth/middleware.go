@@ -102,5 +102,7 @@ func GetLoginURL(state string) string {
 		params.Encode(),
 	)
 
+	fmt.Println("AAAA", loginURL)
+
 	return loginURL
 }
