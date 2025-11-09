@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: casdoor-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: casbin
+      POSTGRES_PASSWORD: casbinpw
+      POSTGRES_DB: casdoor
+    volumes:
+      - casdoor_pg_data:/var/lib/postgresql/data
+    networks:
+      - casdoor-net
+    ports:
+      - "5432:5432"
+
+  casdoor:
+    image: casbin/casdoor:latest
+    container_name: casdoor
+    depends_on:
+      - postgres
+    restart: always
+    environment:
+      driverName: postgres
+      dataSourceName: "user=casbin password=casbinpw host=postgres port=5432 sslmode=disable dbname=casdoor"
+      dbName: casdoor
+      runmode: dev
+      appname: casdoor
+      httpport: 8000
+      origin: http://localhost:8000
+      originFrontend: http://localhost:8000
+    ports:
+      - "8000:8000"
+    networks:
+      - casdoor-net
+
+volumes:
+  casdoor_pg_data:
+
+networks:
+  casdoor-net:
+    driver: bridge
