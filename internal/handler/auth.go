@@ -50,23 +50,10 @@ func (h *AuthHandler) DirectLogin(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "login failed: "+err.Error())
 	}
 
-	// Verify token to get user info
-	claims, err := auth.VerifyToken(token)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to verify token: "+err.Error())
-	}
-
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"access_token": token,
 		"token_type":   "Bearer",
-		"user": map[string]interface{}{
-			"id":          claims.GetUserID(),
-			"name":        claims.Name,
-			"display_name": claims.DisplayName,
-			"email":       claims.Email,
-			"is_admin":    claims.IsAdmin,
-		},
-		"message": "Login successful. Use the access_token in Authorization header.",
+		"message":      "Login successful. Use the access_token in Authorization header.",
 	})
 }
 

@@ -54,11 +54,13 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"message": "Casdoor Integration Demo API",
 			"endpoints": map[string]string{
-				"login":     "GET /api/auth/login - Get OAuth login URL",
+				"login":     "POST /api/auth/login - Direct login with username/password",
+				"oauth":     "GET /api/auth/oauth/login - Get OAuth login URL",
 				"callback":  "GET /api/auth/callback?code=xxx&state=xxx - OAuth callback",
 				"me":        "GET /api/auth/me - Get current user info (requires Bearer token)",
 				"profile":   "GET /api/users/profile - Get user profile (requires Bearer token)",
 				"protected": "GET /api/protected - Access protected resource (requires Bearer token)",
+				"secrets":   "GET /api/secrets - Get secrets (demonstrates cert verification)",
 				"users":     "GET /api/users - Get all users (admin only, requires Bearer token)",
 			},
 		})
@@ -75,11 +77,12 @@ func main() {
 
 	// Protected routes
 	protectedGroup := e.Group("/api")
-	protectedGroup.Use(auth.AuthMiddleware())
+	protectedGroup.Use(auth.AuthMiddleware()) // ← Cert verification happens here!
 	{
 		protectedGroup.GET("/auth/me", authHandler.GetUserInfo)
 		protectedGroup.GET("/users/profile", userHandler.GetProfile)
 		protectedGroup.GET("/protected", userHandler.ProtectedResource)
+		protectedGroup.GET("/secrets", userHandler.GetSecrets) // ← Demonstrates cert usage
 		protectedGroup.GET("/users", userHandler.GetUsers) // Admin only (checked in handler)
 	}
 

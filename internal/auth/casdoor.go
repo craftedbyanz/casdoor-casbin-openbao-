@@ -127,6 +127,7 @@ func GetPublicKey() (*rsa.PublicKey, error) {
 // VerifyToken verifies a JWT token from Casdoor
 func VerifyToken(tokenString string) (*CasdoorClaims, error) {
 	publicKey, err := GetPublicKey()
+	fmt.Println("\n publicKey: ", publicKey)
 	if err != nil {
 		fmt.Println("publicKey-err: ", err)
 		return nil, fmt.Errorf("failed to get public key: %w", err)
@@ -150,4 +151,3 @@ func VerifyToken(tokenString string) (*CasdoorClaims, error) {
 
 	return nil, errors.New("invalid token")
 }
-

@@ -30,6 +30,7 @@ func AuthMiddleware() echo.MiddlewareFunc {
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnauthorized, "invalid token: "+err.Error())
 			}
+			fmt.Println("[ANNNNN]", claims)
 
 			// Store user info in context
 			c.Set("user", claims)
@@ -87,7 +88,7 @@ func GetLoginURL(state string) string {
 	params.Set("redirect_uri", cfg.Casdoor.RedirectURL)
 	params.Set("scope", "read")
 	params.Set("state", state)
-	
+
 	// Add organization and application if configured (some Casdoor versions require these)
 	if cfg.Casdoor.Organization != "" {
 		params.Set("organization", cfg.Casdoor.Organization)
@@ -95,12 +96,11 @@ func GetLoginURL(state string) string {
 	if cfg.Casdoor.Application != "" {
 		params.Set("application", cfg.Casdoor.Application)
 	}
-	
+
 	loginURL := fmt.Sprintf("%s/login/oauth/authorize?%s",
 		cfg.Casdoor.Endpoint,
 		params.Encode(),
 	)
-	
+
 	return loginURL
 }
-
