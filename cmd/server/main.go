@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"casdoor-casbin-openbao/internal/auth"
+	"casdoor-casbin-openbao/internal/casbin"
 	"casdoor-casbin-openbao/internal/config"
+	"casdoor-casbin-openbao/internal/database"
 	"casdoor-casbin-openbao/internal/handler"
 
 	"github.com/joho/godotenv"
@@ -24,6 +26,16 @@ func main() {
 	// Initialize config
 	config.Init()
 	cfg := config.GetConfig()
+
+	// Initialize database
+	if err := database.InitDB(); err != nil {
+		log.Fatal("Failed to initialize database:", err)
+	}
+
+	// Initialize Casbin
+	if err := casbin.InitEnforcer(); err != nil {
+		log.Fatal("Failed to initialize Casbin:", err)
+	}
 
 	// Create Echo instance
 	e := echo.New()
@@ -48,6 +60,9 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler()
 	userHandler := handler.NewUserHandler()
+	adminHandler := handler.NewAdminHandler()
+	debugHandler := handler.NewDebugHandler()
+	fixHandler := handler.NewFixHandler()
 
 	// Public routes
 	e.GET("/", func(c echo.Context) error {
@@ -75,15 +90,32 @@ func main() {
 	authGroup.GET("/callback", authHandler.Callback)
 	authGroup.POST("/logout", authHandler.Logout)
 
-	// Protected routes
+	// Protected routes (with Casbin authorization)
 	protectedGroup := e.Group("/api")
-	protectedGroup.Use(auth.AuthMiddleware()) // ← Cert verification happens here!
+	protectedGroup.Use(auth.AuthMiddleware()) // Authentication
+	protectedGroup.Use(casbin.AuthzMiddleware()) // Authorization
 	{
 		protectedGroup.GET("/auth/me", authHandler.GetUserInfo)
 		protectedGroup.GET("/users/profile", userHandler.GetProfile)
 		protectedGroup.GET("/protected", userHandler.ProtectedResource)
-		protectedGroup.GET("/secrets", userHandler.GetSecrets) // ← Demonstrates cert usage
-		protectedGroup.GET("/users", userHandler.GetUsers) // Admin only (checked in handler)
+		protectedGroup.GET("/secrets", userHandler.GetSecrets)
+		protectedGroup.GET("/users", userHandler.GetUsers)
+	}
+
+	// Admin routes (policy management)
+	adminGroup := e.Group("/api/admin")
+	adminGroup.Use(auth.AuthMiddleware())
+	adminGroup.Use(auth.RequireAdmin()) // Only admin can manage policies
+	{
+		adminGroup.POST("/init", adminHandler.InitPolicies)
+		adminGroup.GET("/policies", adminHandler.GetPolicies)
+		adminGroup.POST("/policies", adminHandler.AddPolicy)
+		adminGroup.DELETE("/policies", adminHandler.RemovePolicy)
+		adminGroup.GET("/roles", adminHandler.GetRoles)
+		adminGroup.POST("/roles", adminHandler.AddRole)
+		adminGroup.DELETE("/roles", adminHandler.RemoveRole)
+		adminGroup.GET("/debug/casbin-rules", debugHandler.GetCasbinRules)
+		adminGroup.POST("/debug/fix-casbin", fixHandler.FixCasbinRules)
 	}
 
 	// Start server
