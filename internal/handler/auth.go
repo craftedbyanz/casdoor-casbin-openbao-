@@ -89,6 +89,7 @@ func (h *AuthHandler) OAuthLogin(c echo.Context) error {
 func (h *AuthHandler) Callback(c echo.Context) error {
 	code := c.QueryParam("code")
 	state := c.QueryParam("state")
+	// TODO: Verify state matches original ← Chưa implement!
 
 	if code == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "missing authorization code")

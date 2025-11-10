@@ -68,9 +68,9 @@ func main() {
 
 	// Auth routes (public)
 	authGroup := e.Group("/api/auth")
-	// Direct login (recommended for API-only backends)
+	// Case 1: Direct login (proxy login)
 	authGroup.POST("/login", authHandler.DirectLogin)
-	// OAuth flow (for web apps with frontend)
+	// Case 2: OAuth / OIDC (OpenID Connect) flow (for web apps with frontend)
 	authGroup.GET("/oauth/login", authHandler.OAuthLogin)
 	authGroup.GET("/callback", authHandler.Callback)
 	authGroup.POST("/logout", authHandler.Logout)
