@@ -63,6 +63,7 @@ func main() {
 	adminHandler := handler.NewAdminHandler()
 	debugHandler := handler.NewDebugHandler()
 	fixHandler := handler.NewFixHandler()
+	microsoftHandler := handler.NewMicrosoftHandler()
 
 	// Public routes
 	e.GET("/", func(c echo.Context) error {
@@ -71,6 +72,7 @@ func main() {
 			"endpoints": map[string]string{
 				"login":     "POST /api/auth/login - Direct login with username/password",
 				"oauth":     "GET /api/auth/oauth/login - Get OAuth login URL",
+				"microsoft": "GET /api/auth/microsoft/login - Get Microsoft SSO login URL",
 				"callback":  "GET /api/auth/callback?code=xxx&state=xxx - OAuth callback",
 				"me":        "GET /api/auth/me - Get current user info (requires Bearer token)",
 				"profile":   "GET /api/users/profile - Get user profile (requires Bearer token)",
@@ -87,6 +89,8 @@ func main() {
 	authGroup.POST("/login", authHandler.DirectLogin)
 	// Case 2: OAuth / OIDC (OpenID Connect) flow (for web apps with frontend)
 	authGroup.GET("/oauth/login", authHandler.OAuthLogin)
+	// Case 3: Microsoft SSO login
+	authGroup.GET("/microsoft/login", microsoftHandler.MicrosoftSSO)
 	authGroup.GET("/callback", authHandler.Callback)
 	authGroup.POST("/logout", authHandler.Logout)
 
