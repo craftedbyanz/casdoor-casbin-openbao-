@@ -65,10 +65,14 @@ func main() {
 	fixHandler := handler.NewFixHandler()
 	microsoftHandler := handler.NewMicrosoftHandler()
 
-	// Public routes
-	e.GET("/", func(c echo.Context) error {
+	// Serve static files
+	e.Static("/", "web")
+
+	// API documentation
+	e.GET("/api", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"message": "Casdoor Integration Demo API",
+			"demo":    "Visit http://localhost:8080 for interactive demo",
 			"endpoints": map[string]string{
 				"login":     "POST /api/auth/login - Direct login with username/password",
 				"oauth":     "GET /api/auth/oauth/login - Get OAuth login URL",
@@ -120,6 +124,7 @@ func main() {
 		adminGroup.DELETE("/roles", adminHandler.RemoveRole)
 		adminGroup.GET("/debug/casbin-rules", debugHandler.GetCasbinRules)
 		adminGroup.POST("/debug/fix-casbin", fixHandler.FixCasbinRules)
+		adminGroup.POST("/reload-policies", adminHandler.ReloadPolicies)
 	}
 
 	// Start server

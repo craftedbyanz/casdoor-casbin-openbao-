@@ -114,3 +114,14 @@ func (h *AdminHandler) InitPolicies(c echo.Context) error {
 		"message": "default policies initialized successfully",
 	})
 }
+
+// ReloadPolicies reloads policies from database
+func (h *AdminHandler) ReloadPolicies(c echo.Context) error {
+	if err := casbin.ReloadPolicies(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"message": "policies reloaded successfully",
+	})
+}

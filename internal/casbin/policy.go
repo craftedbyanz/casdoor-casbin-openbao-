@@ -95,3 +95,13 @@ func GetRoles() [][]string {
 	}
 	return enforcer.GetGroupingPolicy()
 }
+
+// ReloadPolicies reloads policies from database
+func ReloadPolicies() error {
+	enforcer := GetEnforcer()
+	if enforcer == nil {
+		return fmt.Errorf("enforcer not initialized")
+	}
+
+	return enforcer.LoadPolicy()
+}
