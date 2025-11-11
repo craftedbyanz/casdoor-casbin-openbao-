@@ -101,6 +101,31 @@ func (h *AuthHandler) Callback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to exchange token: "+err.Error())
 	}
 
+	// Check if request is from browser (has Accept header for HTML)
+	acceptHeader := c.Request().Header.Get("Accept")
+	if acceptHeader != "" && (c.Request().Header.Get("User-Agent") != "" || 
+		c.Request().Header.Get("Sec-Fetch-Mode") == "navigate") {
+		// Browser request - redirect to homepage with success message
+		return c.HTML(http.StatusOK, `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<title>Login Success</title>
+				<script>
+					// Store token and redirect to dashboard
+					localStorage.setItem('access_token', '`+token.AccessToken+`');
+					localStorage.setItem('token_type', '`+token.TokenType+`');
+					window.location.href = '/dashboard.html';
+				</script>
+			</head>
+			<body>
+				<p>Login successful! Redirecting...</p>
+			</body>
+			</html>
+		`)
+	}
+
+	// API request - return JSON
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"access_token": token.AccessToken,
 		"token_type":   token.TokenType,

@@ -56,6 +56,7 @@ func initDefaultPoliciesInternal() error {
 
 	// Add default policies
 	policies := [][]string{
+		// Basic endpoints
 		{"admin", "/api/users", "read"},
 		{"admin", "/api/admin/*", "write"},
 		{"admin", "/api/protected", "read"},
@@ -64,6 +65,19 @@ func initDefaultPoliciesInternal() error {
 		{"user", "/api/users/profile", "read"},
 		{"user", "/api/protected", "read"},
 		{"user", "/api/auth/me", "read"},
+		
+		// Transaction endpoints
+		{"admin", "/api/transactions", "read"},           // Admin can see all transactions
+		{"admin", "/api/transactions/*", "read"},         // Admin can see specific transactions
+		{"user", "/api/transactions/my", "read"},         // User can see own transactions
+		{"user", "/api/transactions", "write"},          // User can create transactions
+		
+		// Order endpoints
+		{"admin", "/api/orders", "read"},                 // Admin can see all orders
+		{"admin", "/api/orders/*", "read"},               // Admin can see specific orders
+		{"admin", "/api/orders/*", "update"},             // Admin can update order status
+		{"user", "/api/orders/my", "read"},               // User can see own orders
+		{"user", "/api/orders", "write"},                // User can create orders
 	}
 
 	for _, policy := range policies {

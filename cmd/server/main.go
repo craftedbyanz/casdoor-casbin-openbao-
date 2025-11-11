@@ -64,6 +64,8 @@ func main() {
 	debugHandler := handler.NewDebugHandler()
 	fixHandler := handler.NewFixHandler()
 	microsoftHandler := handler.NewMicrosoftHandler()
+	transactionHandler := handler.NewTransactionHandler()
+	orderHandler := handler.NewOrderHandler()
 
 	// Serve static files
 	e.Static("/", "web")
@@ -74,15 +76,17 @@ func main() {
 			"message": "Casdoor Integration Demo API",
 			"demo":    "Visit http://localhost:8080 for interactive demo",
 			"endpoints": map[string]string{
-				"login":     "POST /api/auth/login - Direct login with username/password",
-				"oauth":     "GET /api/auth/oauth/login - Get OAuth login URL",
-				"microsoft": "GET /api/auth/microsoft/login - Get Microsoft SSO login URL",
-				"callback":  "GET /api/auth/callback?code=xxx&state=xxx - OAuth callback",
-				"me":        "GET /api/auth/me - Get current user info (requires Bearer token)",
-				"profile":   "GET /api/users/profile - Get user profile (requires Bearer token)",
-				"protected": "GET /api/protected - Access protected resource (requires Bearer token)",
-				"secrets":   "GET /api/secrets - Get secrets (demonstrates cert verification)",
-				"users":     "GET /api/users - Get all users (admin only, requires Bearer token)",
+				"login":           "POST /api/auth/login - Direct login with username/password",
+				"microsoft":       "GET /api/auth/microsoft/login - Get Microsoft SSO login URL",
+				"callback":        "GET /api/auth/callback?code=xxx&state=xxx - OAuth callback",
+				"me":              "GET /api/auth/me - Get current user info (requires Bearer token)",
+				"profile":         "GET /api/users/profile - Get user profile (requires Bearer token)",
+				"protected":       "GET /api/protected - Access protected resource (requires Bearer token)",
+				"users":           "GET /api/users - Get all users (admin only, requires Bearer token)",
+				"transactions":    "GET /api/transactions - Get all transactions (admin only)",
+				"my-transactions": "GET /api/transactions/my - Get my transactions",
+				"orders":          "GET /api/orders - Get all orders (admin only)",
+				"my-orders":       "GET /api/orders/my - Get my orders",
 			},
 		})
 	})
@@ -103,11 +107,25 @@ func main() {
 	protectedGroup.Use(auth.AuthMiddleware()) // Authentication
 	protectedGroup.Use(casbin.AuthzMiddleware()) // Authorization
 	{
+		// Auth & User endpoints
 		protectedGroup.GET("/auth/me", authHandler.GetUserInfo)
 		protectedGroup.GET("/users/profile", userHandler.GetProfile)
 		protectedGroup.GET("/protected", userHandler.ProtectedResource)
 		protectedGroup.GET("/secrets", userHandler.GetSecrets)
 		protectedGroup.GET("/users", userHandler.GetUsers)
+
+		// Transaction endpoints
+		protectedGroup.GET("/transactions", transactionHandler.GetTransactions)           // Admin only
+		protectedGroup.GET("/transactions/my", transactionHandler.GetMyTransactions)     // User's own
+		protectedGroup.GET("/transactions/:id", transactionHandler.GetTransaction)       // Ownership check
+		protectedGroup.POST("/transactions", transactionHandler.CreateTransaction)       // User can create
+
+		// Order endpoints
+		protectedGroup.GET("/orders", orderHandler.GetOrders)                           // Admin only
+		protectedGroup.GET("/orders/my", orderHandler.GetMyOrders)                     // User's own
+		protectedGroup.GET("/orders/:id", orderHandler.GetOrder)                       // Ownership check
+		protectedGroup.POST("/orders", orderHandler.CreateOrder)                       // User can create
+		protectedGroup.PUT("/orders/:id/status", orderHandler.UpdateOrderStatus)       // Admin only
 	}
 
 	// Admin routes (policy management)
@@ -131,7 +149,7 @@ func main() {
 	address := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Server starting on %s", address)
 	log.Printf("Casdoor endpoint: %s", cfg.Casdoor.Endpoint)
-	log.Printf("Make sure to set CASDOOR_CLIENT_ID and CASDOOR_CLIENT_SECRET environment variables")
+	log.Printf("Browser Access: http://localhost:8080")
 
 	if err := e.Start(address); err != nil && err != http.ErrServerClosed {
 		log.Fatal("Failed to start server:", err)

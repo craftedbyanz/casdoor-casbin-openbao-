@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations Portal - ANZ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .welcome-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .operations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .operation-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .operation-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        
+        .operation-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .operation-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .operation-desc {
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+        
+        .transactions { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+        .orders { background: linear-gradient(135deg, #fd79a8, #e84393); }
+        .users { background: linear-gradient(135deg, #fdcb6e, #e17055); }
+        .reports { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+        
+        .transactions, .orders, .users, .reports {
+            color: white;
+        }
+        
+        .transactions .operation-title,
+        .orders .operation-title,
+        .users .operation-title,
+        .reports .operation-title {
+            color: white;
+        }
+        
+        .transactions .operation-desc,
+        .orders .operation-desc,
+        .users .operation-desc,
+        .reports .operation-desc {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: white;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🏦 ANZ Operations Portal</div>
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <div>
+                <div id="userName">Loading...</div>
+                <div style="font-size: 0.8rem; color: #7f8c8d;" id="userRole">User</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-section">
+            <h1>Welcome to Operations Portal</h1>
+            <p>Manage your financial operations with secure access control</p>
+        </div>
+
+        <div id="loadingMessage" class="loading">
+            🔄 Loading user information...
+        </div>
+
+        <div id="errorMessage" class="error" style="display: none;"></div>
+
+        <div id="operationsGrid" class="operations-grid" style="display: none;">
+            <a href="transactions.html" class="operation-card transactions">
+                <span class="operation-icon">💰</span>
+                <div class="operation-title">Transaction Management</div>
+                <div class="operation-desc">View, create, and manage financial transactions with role-based access control</div>
+            </a>
+
+            <a href="orders.html" class="operation-card orders">
+                <span class="operation-icon">🛒</span>
+                <div class="operation-title">Order Management</div>
+                <div class="operation-desc">Process and track orders with automated workflow and approval systems</div>
+            </a>
+
+            <a href="users.html" class="operation-card users">
+                <span class="operation-icon">👥</span>
+                <div class="operation-title">User Management</div>
+                <div class="operation-desc">Manage user accounts, roles, and permissions (Admin access required)</div>
+            </a>
+
+            <a href="reports.html" class="operation-card reports">
+                <span class="operation-icon">📊</span>
+                <div class="operation-title">Reports & Analytics</div>
+                <div class="operation-desc">Generate comprehensive reports and view analytics dashboards</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let currentToken = localStorage.getItem('access_token');
+
+        async function loadUserInfo() {
+            if (!currentToken) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    
+                    // Update UI
+                    document.getElementById('userName').textContent = user.display_name || user.name;
+                    document.getElementById('userRole').textContent = user.is_admin ? 'Administrator' : 'User';
+                    document.getElementById('userAvatar').textContent = (user.display_name || user.name).charAt(0).toUpperCase();
+                    
+                    // Hide loading, show operations
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    document.getElementById('operationsGrid').style.display = 'grid';
+                    
+                } else {
+                    throw new Error('Failed to load user info');
+                }
+            } catch (error) {
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'Failed to load user information. Please login again.';
+                
+                setTimeout(() => {
+                    localStorage.removeItem('access_token');
+                    window.location.href = '/';
+                }, 3000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = '/';
+        }
+
+        // Initialize
+        window.onload = loadUserInfo;
+    </script>
+</body>
+</html>

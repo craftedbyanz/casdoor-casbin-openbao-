@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Management - ANZ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .back-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-btn:hover {
+            background: #2980b9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .page-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #229954;
+        }
+        
+        .content-area {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        
+        #results {
+            margin-top: 1rem;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="nav-left">
+            <a href="dashboard.html" class="back-btn">← Back to Dashboard</a>
+            <h2>💰 Transaction Management</h2>
+        </div>
+        <div id="userInfo">Loading...</div>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Transaction Operations</h1>
+            <p>Manage financial transactions with role-based access control</p>
+            
+            <div class="actions">
+                <button class="btn btn-primary" onclick="loadMyTransactions()">📊 My Transactions</button>
+                <button class="btn btn-primary" onclick="loadAllTransactions()">📈 All Transactions (Admin)</button>
+                <button class="btn btn-success" onclick="createTransaction()">➕ Create Transaction</button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div id="loading" class="loading">
+                Select an action above to get started
+            </div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let currentToken = localStorage.getItem('access_token');
+
+        // Check authentication
+        if (!currentToken) {
+            window.location.href = '/';
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userInfo').textContent = `${user.display_name || user.name} (${user.is_admin ? 'Admin' : 'User'})`;
+                } else {
+                    throw new Error('Auth failed');
+                }
+            } catch (error) {
+                localStorage.removeItem('access_token');
+                window.location.href = '/';
+            }
+        }
+
+        async function loadMyTransactions() {
+            showLoading('Loading your transactions...');
+            await callAPI('/api/transactions/my', 'My Transactions');
+        }
+
+        async function loadAllTransactions() {
+            showLoading('Loading all transactions...');
+            await callAPI('/api/transactions', 'All Transactions (Admin Only)');
+        }
+
+        async function createTransaction() {
+            showLoading('Creating transaction...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/transactions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount: 100.50,
+                        type: 'deposit',
+                        description: 'Test transaction from portal'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('Transaction created successfully!');
+                    showResult('Create Transaction', data);
+                } else {
+                    showError(`Failed to create transaction: ${data.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                showError(`Network error: ${error.message}`);
+            }
+        }
+
+        async function callAPI(endpoint, title) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(title, data);
+                } else {
+                    showError(`${title}: ${data.message || 'Access denied'}`);
+                }
+            } catch (error) {
+                showError(`${title}: Network error - ${error.message}`);
+            }
+        }
+
+        function showLoading(message) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').textContent = `🔄 ${message}`;
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function showResult(title, data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').innerHTML = `
+                <div class="result-item">
+                    <h3>${title}</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        function showSuccess(message) {
+            document.getElementById('results').innerHTML = `<div class="success">${message}</div>` + document.getElementById('results').innerHTML;
+        }
+
+        // Initialize
+        window.onload = loadUserInfo;
+    </script>
+</body>
+</html>
