@@ -58,30 +58,6 @@ GET /api/certs
 
 > Cần public key này trong backend.
 
-### OpenBao (Vault) — Secrets Management
-
-Dùng để lưu:
-
-    - CASDOOR_CLIENT_ID
-    - CASDOOR_CLIENT_SECRET
-    - JWT_PUBLIC_KEY
-    - DB password
-    - Casbin adapter credentials…
-
-1. Run OpenBao (giống Vault)
-
-```
-docker run -d --name openbao -p 8200:8200 openbao/openbao
-```
-
-2. Lưu secrets
-
-```
-vault kv put secret/casdoor client_id="xxx" client_secret="yyy"
-vault kv put secret/jwt public_key="-----BEGIN PUBLIC KEY-----..."
-vault kv put secret/db dsn="postgres://user:pass@localhost/db"
-```
-
 ### Casbin — Authorization Engine
 
 Casbin local trong backend, dùng DB adapter (vd: PostgreSQL).
@@ -149,9 +125,4 @@ curl -X POST "http://localhost:8000/api/add-user" \
 
 # 4. Gọi API với token user
 curl -X GET "http://localhost:8000/api/get-account" -H "Authorization: Bearer $USER_TOKEN"
-```
-
-
-### Cert
-```
 ```

@@ -21,19 +21,9 @@
 8. Backend: Verify JWT token từ Casdoor
 ```
 
-**Ưu điểm:**
-- Chuẩn OAuth2/OIDC
-- Phù hợp cho web app với frontend riêng
-- User quản lý session trên Casdoor
-
-**Nhược điểm:**
-- Phức tạp hơn
-- Cần redirect flow
-- Không phù hợp cho API-only backend
-
 ---
 
-### Option 2: Direct Login API (Đơn giản hơn - Khuyến nghị)
+### Option 2: Direct Login API
 
 **Luồng:**
 ```
@@ -44,16 +34,6 @@
 5. User → Backend: Gửi request với Bearer token
 6. Backend: Verify JWT token từ Casdoor
 ```
-
-**Ưu điểm:**
-- Đơn giản, giống flow hiện tại (username/password)
-- Không cần redirect
-- Phù hợp cho API-only backend
-- Dễ migrate từ code fix cứng
-
-**Nhược điểm:**
-- Backend phải xử lý password (nhưng chỉ forward đến Casdoor)
-- Không có OAuth flow
 
 ---
 
@@ -202,4 +182,3 @@ Vì:
 - Phù hợp với hệ thống hiện tại (username/password)
 - Vẫn secure với JWT verification
 - Có thể thêm OAuth flow sau nếu cần
-
